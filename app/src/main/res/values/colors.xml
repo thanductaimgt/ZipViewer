@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lightPrimary">#de9b28</color>
+    <color name="LightPrimaryDark">#345feb</color>
+    <color name="LightAccent">#34c6eb</color>
+    <color name="LightBackground">#ffffff</color>
+    <color name="LightStrongGray">#919191</color>
+    <color name="LightMediumGray">#dbdbdb</color>
+    <color name="lightWeakGray">#f2f2f2</color>
+    <color name="LightErrorText">#b00020</color>
+    <color name="LightCancelButtonBackground">#e61515</color>
+    <color name="LightText">@color/lightPrimary</color>#212121
+</resources>
