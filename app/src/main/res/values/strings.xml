@@ -4,4 +4,6 @@
 
     <string name="choose_file">Chọn file</string>
     <string name="label_choose_file_from">Chọn file từ</string>
+    <string name="file_icon">File Icon</string>
+    <string name="directory">Thư mục</string>
 </resources>

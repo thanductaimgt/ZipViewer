@@ -16,10 +16,10 @@
         <!--</item>-->
         <!-- Colors -->
         <item name="colorPrimary">@color/lightPrimary</item>
-        <item name="colorPrimaryDark">@color/LightPrimaryDark</item>
-        <item name="colorAccent">@color/LightAccent</item>
+        <item name="colorPrimaryDark">@color/lightPrimaryDark</item>
+        <item name="colorAccent">@color/lightAccent</item>
 
-        <item name="android:colorBackground">@color/LightBackground</item>
+        <item name="android:colorBackground">@color/lightBackground</item>
 
         <item name="colorError">@color/design_default_color_error</item>
         <item name="android:textViewStyle">@style/AppTheme.Light.Text.Normal</item>
@@ -29,7 +29,7 @@
     </style>
 
     <style name="AppTheme.Light.Text">
-        <item name="android:textColor">@color/LightText</item>
+        <item name="android:textColor">@color/lightText</item>
         <!--<item fileName="android:typeface">sans</item>-->
     </style>
 
@@ -53,7 +53,7 @@
         <item name="android:enabled">false</item>
     </style>
 
-<!--    <style name="BottomSheetDialogTheme.Transparent" parent="Theme.Design.Light.BottomSheetDialog">-->
+<!--    <style name="BottomSheetDialogTheme.Transparent" parent="Theme.Design.light.BottomSheetDialog">-->
 <!--        <item name="bottomSheetStyle">@style/BottomSheetTheme.Transparent</item>-->
 <!--    </style>-->
 
@@ -69,25 +69,56 @@
         <!--<item fileName="tabPaddingEnd">12dp</item>-->
         <!--<item fileName="tabBackground">?attr/selectableItemBackground</item>-->
         <!--<item fileName="tabTextAppearance">@style/TextAppearance.Design.Tab</item>-->
-        <item name="tabSelectedTextColor">@color/lightPrimary</item>
+
+<!--        <item name="tabSelectedTextColor">@color/lightPrimary</item>-->
         <item name="tabIndicatorColor">@color/lightPrimary</item>
+        <item name="android:colorBackground">@color/darkBackground</item>
     </style>
 
-<!--    <style name="AppTheme.SplashTheme" parent="AppTheme.Light.NoActionBar">-->
+<!--    <style name="AppTheme.SplashTheme" parent="AppTheme.light.NoActionBar">-->
 <!--        <item name="android:windowBackground">@drawable/splash</item>-->
 <!--    </style>-->
 
     <style name="ButtonTheme.Cancel" parent="Theme.MaterialComponents.Light">
         <item name="materialButtonStyle">@style/ButtonTheme.RoundCorners</item>
-        <item name="colorPrimary">@color/LightCancelButtonBackground</item>
-        <item name="colorPrimaryDark">@color/LightPrimaryDark</item>
-        <item name="colorAccent">@color/LightAccent</item>
-        <item name="android:colorBackground">@color/LightBackground</item>
+        <item name="colorPrimary">@color/lightCancelButtonBackground</item>
+        <item name="colorPrimaryDark">@color/lightPrimaryDark</item>
+        <item name="colorAccent">@color/lightAccent</item>
+        <item name="android:colorBackground">@color/lightBackground</item>
     </style>
 
     <style name="TextTheme.Error" parent="@android:style/TextAppearance">
-        <item name="android:textColor">@color/LightErrorText</item>
+        <item name="android:textColor">@color/lightErrorText</item>
     </style>
-    <style name="AppTheme.Light.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
-    <style name="AppTheme.Light.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+    <style name="AppTheme.light.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="AppTheme.light.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+
+    <style name="AppTheme.Dark.NoActionBar" parent="AppTheme.Dark">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.Dark" parent="Theme.MaterialComponents.Light">
+        <!--<item fileName="android:windowBackground">@color/colorBackground</item>-->
+        <!-- Buttons -->
+        <item name="materialButtonStyle">@style/ButtonTheme.RoundCorners</item>
+        <!--<item fileName="materialButtonOutlinedStyle">-->
+        <!--@style/Widget.MaterialComponents.Button.OutlinedButton-->
+        <!--</item>-->
+        <!--<item fileName="materialButtonToggleGroupStyle">-->
+        <!--@style/Widget.MaterialComponents.MaterialButtonToggleGroup-->
+        <!--</item>-->
+        <!-- Colors -->
+        <item name="colorPrimary">@color/darkPrimary</item>
+        <item name="colorPrimaryDark">@color/darkPrimaryDark</item>
+        <item name="colorAccent">@color/darkAccent</item>
+
+        <item name="android:colorBackground">@color/darkBackground</item>
+
+        <item name="colorError">@color/design_default_color_error</item>
+        <item name="android:textViewStyle">@style/AppTheme.Light.Text.Normal</item>
+
+        <!--<item fileName="actionBarSize">@dimen/mtrl_toolbar_default_height</item>-->
+        <!--<item fileName="minTouchTargetSize">@dimen/mtrl_min_touch_target_size</item>-->
+    </style>
 </resources>

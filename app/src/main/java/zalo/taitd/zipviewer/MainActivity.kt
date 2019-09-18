@@ -8,17 +8,18 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.MimeTypeMap
-import androidx.fragment.app.Fragment
+import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
-    private var fileViewFragment:Fragment?=null
+    private lateinit var adapter:MainActivityAdapter
 
     override fun onClick(view: View) {
         when(view.id){
             R.id.chooseFileImgView -> dispatchChoosePictureIntent()
+            R.id.addFileImgView -> dispatchChoosePictureIntent()
         }
     }
 
@@ -49,8 +50,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun displayFile(uri: Uri){
-        if(fileViewFragment==null){
-            fileViewFragment
+        tabLayout.addTab(tabLayout.newTab())
+        adapter.fileUris.add(uri)
+        // must call this when add tab at runtime
+        adapter.notifyDataSetChanged()
+        viewPager.currentItem = adapter.fileUris.lastIndex
+
+        if(addFileImgView.visibility == View.GONE){
+            addFileImgView.visibility = View.VISIBLE
         }
     }
 
@@ -58,6 +65,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initView()
+    }
+
+    private fun initView(){
+        adapter = MainActivityAdapter(this, supportFragmentManager)
+        viewPager.adapter = adapter
+        tabLayout.setupWithViewPager(viewPager)
+
         chooseFileImgView.setOnClickListener(this)
+        addFileImgView.setOnClickListener(this)
     }
 }

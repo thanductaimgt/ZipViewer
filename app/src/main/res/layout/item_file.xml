@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/rootItemView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+<ImageView
+    android:layout_marginBottom="4dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:layout_marginTop="4dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginLeft="8dp"
+    tools:src="@drawable/zip"
+    android:contentDescription="@string/file_icon"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    android:layout_width="48dp"
+    android:layout_height="0dp"
+    app:layout_constraintDimensionRatio="1:1"
+    android:id="@+id/fileIconImgView"
+    />
+    <TextView
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:textSize="@dimen/sizeTextTitle"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/fileSizeTextView"
+        tools:text="test-db_master.zip"
+        app:layout_constraintTop_toTopOf="@id/fileIconImgView"
+        app:layout_constraintStart_toEndOf="@id/fileIconImgView"
+        android:id="@+id/fileNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:textSize="@dimen/sizeTextSmall"
+        app:layout_constraintBottom_toBottomOf="@id/fileIconImgView"
+        tools:text="34.99 MB"
+        app:layout_constraintTop_toBottomOf="@id/fileNameTextView"
+        app:layout_constraintStart_toStartOf="@id/fileNameTextView"
+        android:id="@+id/fileSizeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
