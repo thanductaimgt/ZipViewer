@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
-    android:clipToPadding="false"
-    android:background="@color/darkBackground"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/recyclerView"/>
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.recyclerview.widget.RecyclerView
+        android:background="@color/darkBackgroundAccent"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/recyclerView"/>
+    <com.airbnb.lottie.LottieAnimationView
+        android:visibility="gone"
+        app:lottie_rawRes="@raw/loading"
+        android:id="@+id/animView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        android:layout_width="64dp"
+        android:layout_height="0dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

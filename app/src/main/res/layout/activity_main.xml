@@ -7,6 +7,7 @@
     tools:context=".MainActivity">
 
     <ImageView
+        android:contentDescription="@string/app_name_camel"
         android:id="@+id/appIconImgView"
         android:layout_width="36dp"
         android:layout_height="0dp"
@@ -40,7 +41,7 @@
         android:id="@+id/tabLayout"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
-        android:background="@color/darkStrongGray"
+        app:tabBackground="@drawable/tab_color_selector"
         app:layout_constraintEnd_toStartOf="@id/addFileImgView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appIconImgView"
@@ -51,6 +52,7 @@
         app:tabTextColor="@color/darkAccent" />
 
     <ImageView
+        android:contentDescription="@string/add_file"
         android:padding="4dp"
         tools:visibility="visible"
         android:visibility="gone"
@@ -66,6 +68,7 @@
         app:layout_constraintTop_toTopOf="@id/tabLayout" />
 
     <ImageView
+        android:contentDescription="@string/add_file"
         android:id="@+id/chooseFileImgView"
         android:layout_width="100dp"
         android:layout_height="0dp"

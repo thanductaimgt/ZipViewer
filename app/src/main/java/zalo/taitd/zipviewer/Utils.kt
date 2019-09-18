@@ -53,6 +53,14 @@ object Utils {
 
         return if (resourceId != 0) resourceId else R.drawable.file
     }
+
+    fun getFileExtension(fileName: String): String {
+        val lastDotIndex = fileName.lastIndexOf('.')
+        return if (lastDotIndex != -1) fileName.substring(
+            lastDotIndex + 1,
+            fileName.length
+        ) else ""
+    }
 }
 
 val Any.TAG: String

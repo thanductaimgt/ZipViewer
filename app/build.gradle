@@ -9,7 +9,7 @@ android {
     buildToolsVersion "29.0.0"
     defaultConfig {
         applicationId "zalo.taitd.zipviewer"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -35,4 +35,11 @@ dependencies {
 
     //material design
     implementation "com.google.android.material:material:1.1.0-alpha10"
+
+    // rx java2
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.9'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+
+    //lottie
+    implementation 'com.airbnb.android:lottie:3.0.7'
 }
