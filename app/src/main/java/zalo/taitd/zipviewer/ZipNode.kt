@@ -5,17 +5,14 @@ import java.util.zip.ZipEntry
 data class ZipNode(
     var entry: ZipEntry? = null,
     var parentNode: ZipNode? = null,
-    var childNodes: HashMap<String, ZipNode> = HashMap()
+    var level: Int = 0,
+    var childNodes: ArrayList<ZipNode> = ArrayList()
 ) {
-    fun insertEntry(entry: ZipEntry) {
-        var curNode = this
-        val layerNames = entry.name.split('/').filter { it != "" }
-        layerNames.forEachIndexed { index, layerName ->
-            if (index == layerNames.lastIndex) {
-                curNode.childNodes[Utils.getFileName(entry.name)] = ZipNode(entry, curNode)
-            } else {
-                curNode = curNode.childNodes[layerName]!!
-            }
+    fun insertEntry(entry: ZipEntry, level: Int): ZipNode {
+        return if (level > this.level) {
+            ZipNode(entry, this, level).also { childNodes.add(it) }
+        } else {
+            parentNode!!.insertEntry(entry, level)
         }
     }
 }

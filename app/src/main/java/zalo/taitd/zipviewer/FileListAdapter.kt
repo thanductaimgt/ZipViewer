@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_file.view.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class FileListAdapter(private val fragment: Fragment) :
     RecyclerView.Adapter<FileListAdapter.FileItemViewHolder>() {
@@ -26,13 +29,17 @@ class FileListAdapter(private val fragment: Fragment) :
 
     inner class FileItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(position: Int) {
-            val zipEntry = zipNodes[position].entry!!
+            val zipNode = zipNodes[position]
+            val zipEntry = zipNode.entry!!
             itemView.apply {
                 val fileName = Utils.getFileName(zipEntry.name)
                 val fileExtension = Utils.getFileExtension(fileName)
                 fileNameTextView.text = fileName
                 fileSizeTextView.text =
-                    if (zipEntry.isDirectory) context.getString(R.string.directory) else Utils.getFormatFileSize(
+                    if (zipEntry.isDirectory) String.format(
+                        context.getString(R.string.directory),
+                        zipNode.childNodes.size
+                    ) else Utils.getFormatFileSize(
                         zipEntry.size
                     )
                 fileIconImgView.setImageResource(
@@ -41,7 +48,12 @@ class FileListAdapter(private val fragment: Fragment) :
                         fileExtension
                     )
                 )
-
+                val lastModifiedDate = Date(zipEntry.time)
+                fileTimeTextView.text = String.format(
+                    context.getString(R.string.time_format),
+                    SimpleDateFormat.getDateInstance().format(lastModifiedDate),
+                    SimpleDateFormat.getTimeInstance().format(lastModifiedDate)
+                )
                 setOnClickListener(fragment as View.OnClickListener)
             }
         }

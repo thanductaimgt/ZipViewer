@@ -5,7 +5,9 @@
     <string name="choose_file">Chọn file</string>
     <string name="label_choose_file_from">Chọn file từ</string>
     <string name="file_icon">File Icon</string>
-    <string name="directory">Thư mục</string>
+    <string name="directory">Thư mục (%d item)</string>
     <string name="press_again_to_exit">Bấm lần nữa để thoát</string>
     <string name="add_file">Thêm file</string>
+    <string name="time_format">%s\n%s</string>
+    <string name="close_tab">Đóng tab</string>
  </resources>

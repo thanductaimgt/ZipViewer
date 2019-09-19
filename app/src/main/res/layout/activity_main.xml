@@ -32,7 +32,28 @@
         app:layout_constraintStart_toEndOf="@id/appIconImgView"
         app:layout_constraintTop_toTopOf="@id/appIconImgView" />
 
+<!--    <com.google.android.material.tabs.TabLayout-->
+<!--        android:background="@drawable/shape_round_top_dark_weak_gray"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        tools:layout_width="100dp"-->
+<!--        app:layout_constrainedWidth="true"-->
+<!--        app:layout_constraintHorizontal_bias="0"-->
+<!--        app:layout_constraintHorizontal_chainStyle="packed"-->
+<!--        android:id="@+id/tabLayout"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="40dp"-->
+<!--        app:tabBackground="@drawable/tab_color_selector"-->
+<!--        app:layout_constraintEnd_toStartOf="@id/addFileImgView"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/appIconImgView"-->
+<!--        app:tabIndicatorColor="@color/darkPrimary"-->
+<!--        app:tabMode="scrollable"-->
+<!--        app:tabSelectedTextColor="@color/darkPrimary"-->
+<!--        app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"-->
+<!--        app:tabTextColor="@color/darkAccent" />-->
     <com.google.android.material.tabs.TabLayout
+        tools:background="@drawable/shape_round_top_dark_strong_gray"
+        android:background="@null"
         android:layout_marginTop="16dp"
         tools:layout_width="100dp"
         app:layout_constrainedWidth="true"
@@ -40,24 +61,28 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         android:id="@+id/tabLayout"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        app:tabBackground="@drawable/tab_color_selector"
+        android:layout_height="30dp"
         app:layout_constraintEnd_toStartOf="@id/addFileImgView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appIconImgView"
         app:tabIndicatorColor="@color/darkPrimary"
         app:tabMode="scrollable"
-        app:tabSelectedTextColor="@color/darkPrimary"
-        app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
-        app:tabTextColor="@color/darkAccent" />
+        app:tabPaddingBottom="0dp"
+        app:tabPaddingEnd="0dp"
+        app:tabPaddingStart="0dp"
+        app:tabPaddingTop="0dp"/>
 
     <ImageView
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginLeft="2dp"
+        android:paddingTop="2dp"
         android:contentDescription="@string/add_file"
-        android:padding="4dp"
         tools:visibility="visible"
         android:visibility="gone"
         android:id="@+id/addFileImgView"
-        android:layout_width="48dp"
+        android:layout_width="34dp"
         android:layout_height="0dp"
         android:src="@drawable/add"
         app:layout_constraintBottom_toBottomOf="@id/tabLayout"

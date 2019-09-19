@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="1dp"
+    android:layout_marginLeft="1dp"
+    android:background="@drawable/shape_round_top_dark_strong_gray"
+    android:paddingStart="8dp"
+    android:paddingLeft="8dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="4dp"
+    android:paddingRight="4dp"
+    android:paddingBottom="6dp"
+    tools:background="@drawable/shape_round_top_dark_strong_gray">
+
+    <TextView
+        app:layout_constrainedWidth="true"
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:layout_marginRight="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:scrollHorizontally="true"
+        app:layout_constraintEnd_toStartOf="@id/closeTabImgView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="test-db_master.zipaasaaaaaaaasdasdsaasdsadasasdasdsadsdasad" />
+
+    <ImageView
+        android:id="@+id/closeTabImgView"
+        android:layout_width="16dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/close_tab"
+        android:padding="2dp"
+        android:src="@drawable/close_tab"
+        app:layout_constraintBottom_toBottomOf="@id/titleTextView"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

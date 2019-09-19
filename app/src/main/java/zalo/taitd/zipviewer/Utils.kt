@@ -38,10 +38,10 @@ object Utils {
 
     fun getFormatFileSize(byteNum: Long): String {
         return when {
-            byteNum < 1024 -> "${byteNum}B"
-            byteNum < 1024 * 1024 -> String.format("%.1fKB", byteNum / 1024f)
-            byteNum < 1024 * 1024 * 1024 -> String.format("%.2fMB", byteNum / (1024f * 1024))
-            else -> String.format("%.2fGB", byteNum / (1024f * 1024 * 1024))
+            byteNum < 1000 -> "${byteNum}B"
+            byteNum < 1000 * 1000 -> String.format("%.1fKB", byteNum / 1000f)
+            byteNum < 1000 * 1000 * 1000 -> String.format("%.2fMB", byteNum / (1000 * 1000f))
+            else -> String.format("%.2fGB", byteNum / (1000f * 1000 * 1000f))
         }
     }
 
