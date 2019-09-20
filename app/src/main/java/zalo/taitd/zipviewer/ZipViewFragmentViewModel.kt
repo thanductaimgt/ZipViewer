@@ -14,24 +14,24 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 @SuppressLint("CheckResult")
-class ZipViewFragmentViewModel(zipInputStream: ZipInputStream) : ViewModel() {
+class ZipViewFragmentViewModel(zipFile: ZipFile) : ViewModel() {
     val liveRootNode = MutableLiveData<ZipNode?>()
     private var isTreeParsed: Boolean = false
     private val compositeDisposable = CompositeDisposable()
 
     init {
         Completable.fromCallable {
-            parseZipTree(zipInputStream)
+            parseZipTree(zipFile)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(ParseZipTreeObserver())
     }
 
-    private fun parseZipTree(zipInputStream: ZipInputStream) {
-        var curEntry = zipInputStream.nextEntry
+    private fun parseZipTree(zipFile: ZipFile) {
         val entryQueue: Queue<ZipEntry> = LinkedList()
 
         Single.fromCallable {
@@ -41,15 +41,19 @@ class ZipViewFragmentViewModel(zipInputStream: ZipInputStream) : ViewModel() {
             .subscribeWith(InsertNodesObserver())
 
         try {
-            while (curEntry != null) {
-                entryQueue.offer(curEntry)
-                Log.d(TAG, "enqueue: $curEntry")
-                curEntry = zipInputStream.nextEntry
+            val enum = zipFile.entries()
+            while(enum.hasMoreElements()){
+                entryQueue.offer(enum.nextElement())
             }
+//            while (curEntry != null) {
+//                entryQueue.offer(curEntry)
+//                Log.d(TAG, "enqueue: $curEntry")
+//                curEntry = zipInputStream.nextEntry
+//            }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            zipInputStream.close()
+            zipFile.close()
         }
     }
 

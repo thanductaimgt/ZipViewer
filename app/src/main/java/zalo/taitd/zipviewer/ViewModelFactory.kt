@@ -2,15 +2,16 @@ package zalo.taitd.zipviewer
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 class ViewModelFactory private constructor() : ViewModelProvider.Factory {
-    private lateinit var zipInputStream: ZipInputStream
+    private lateinit var zipFile: ZipFile
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when (modelClass) {
-            ZipViewFragmentViewModel::class.java -> ZipViewFragmentViewModel(zipInputStream) as T
+            ZipViewFragmentViewModel::class.java -> ZipViewFragmentViewModel(zipFile) as T
             else -> modelClass.newInstance()
         }
     }
@@ -18,7 +19,7 @@ class ViewModelFactory private constructor() : ViewModelProvider.Factory {
     companion object {
         private var instance: ViewModelFactory? = null
 
-        fun getInstance(zipInputStream:ZipInputStream? = null): ViewModelFactory {
+        fun getInstance(zipFile:ZipFile? = null): ViewModelFactory {
             if (instance == null) {
                 synchronized(ViewModelFactory) {
                     if (instance == null) {
@@ -27,8 +28,8 @@ class ViewModelFactory private constructor() : ViewModelProvider.Factory {
                 }
             }
 
-            if (zipInputStream != null) {
-                instance!!.zipInputStream = zipInputStream
+            if (zipFile != null) {
+                instance!!.zipFile = zipFile
             }
             return instance!!
         }

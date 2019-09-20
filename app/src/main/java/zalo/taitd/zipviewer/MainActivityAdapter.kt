@@ -13,6 +13,8 @@ class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
     FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
     val fileUris = ArrayList<Uri>()
     var curFragment: Fragment? = null
+    var lastRemovedUri: Uri? = null
+    var lastRemovedIndex: Int? = null
 
     override fun getItem(position: Int): Fragment {
         return ZipViewFragment(fileUris[position])
@@ -41,19 +43,21 @@ class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
     fun removeTabPage(position: Int) {
         if (fileUris.isNotEmpty() && position < fileUris.size) {
             fileUris.removeAt(position)
+            lastRemovedUri = fileUris[position]
+            lastRemovedIndex = position
             notifyDataSetChanged()
+            lastRemovedUri = null
+            lastRemovedIndex = null
         }
     }
 
-    override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        return (super.instantiateItem(container, position) as ZipViewFragment)
-    }
-
     override fun getItemPosition(any: Any): Int {
-        return if (fileUris.contains((any as ZipViewFragment).fileUri)) {
-            PagerAdapter.POSITION_UNCHANGED
-        } else {
+        val uri = (any as ZipViewFragment).fileUri
+        val position = fileUris.indexOf(uri)
+        return if (position == -1 || position > lastRemovedIndex!!) {
             PagerAdapter.POSITION_NONE
+        } else {
+            PagerAdapter.POSITION_UNCHANGED
         }
     }
 }
