@@ -61,9 +61,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.chooseFileImgView -> dispatchChoosePictureIntent()
-            R.id.addFileImgView -> dispatchChoosePictureIntent()
+            R.id.chooseFileImgView -> {
+                addDefaultTab()
+//                dispatchChoosePictureIntent()
+            }
+            R.id.addFileImgView -> {
+                addDefaultTab()
+                //dispatchChoosePictureIntent()
+            }
         }
+    }
+
+    private fun addDefaultTab(){
+        val defaultUri = "https://drive.google.com/uc?export=download&id=1Zson--ESF9M2AhsN7n1AQoGeF06NmiFK"
+        addTab(defaultUri)
     }
 
     private fun dispatchChoosePictureIntent() {
@@ -91,12 +102,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 Constants.CHOOSE_FILE -> {
                     intent?.data?.let {
                         adapter.fileUris.forEachIndexed { index, uri ->
-                            if(uri == it){
+                            if(uri == it.toString()){
                                 viewPager.currentItem = index
                                 return@let
                             }
                         }
-                        addTab(it)
+                        addTab(it.toString())
                     }
                 }
             }
@@ -105,7 +116,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun addTab(uri: Uri) {
+    private fun addTab(uri: String) {
         tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(uri)))
         adapter.addTabPage(uri)
         viewPager.currentItem = viewPager.childCount-1
@@ -136,11 +147,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun getTabView(uri: Uri): View {
+    private fun getTabView(uri: String): View {
         // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
         val rootView = LayoutInflater.from(this).inflate(R.layout.custom_tab, null)
         val titleTextView = rootView.findViewById(R.id.titleTextView) as TextView
-        titleTextView.text = Utils.getFileName(this, uri)
+        titleTextView.text = Utils.getFileName(uri)
 
         val closeTabImgView = rootView.findViewById(R.id.closeTabImgView) as ImageView
         closeTabImgView.setOnClickListener{

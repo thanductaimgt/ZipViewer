@@ -247,6 +247,10 @@ object Utils {
 
         return ret
     }
+
+    fun isHttpUri(uri:String):Boolean{
+        return uri.startsWith("http")
+    }
 }
 
 val Any.TAG: String

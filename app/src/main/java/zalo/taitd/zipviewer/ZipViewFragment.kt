@@ -21,21 +21,10 @@ import java.io.File
 import java.util.zip.ZipFile
 
 
-class ZipViewFragment(val fileUri: Uri) : Fragment(), View.OnClickListener {
+class ZipViewFragment(val fileUri: String) : Fragment(), View.OnClickListener {
     private lateinit var viewModel: ZipViewFragmentViewModel
     var curZipNode: ZipNode? = null
     private lateinit var adapter: FileListAdapter
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
-//        val zipFile = ZipFile(uriRealPath)
-//
-//        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(zipFile)).get(
-//            ZipViewFragmentViewModel::class.java
-//        )
-//    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,24 +37,24 @@ class ZipViewFragment(val fileUri: Uri) : Fragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         initView(view)
 
-        Log.d(TAG, "here1")
-        checkReadExternalStoragePermission()
-        Log.d(TAG, "here2")
-//        val zipFile = ZipFile(fileUri.path)
-//
-//        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(zipFile)).get(
-//            ZipViewFragmentViewModel::class.java
-//        )
-//
-//        viewModel.liveRootNode.observe(viewLifecycleOwner, Observer {
-//            animView?.cancelAnimation()
-//            animView?.visibility = View.GONE
-//            if (it != null) {
-//                setCurrentNode(it)
-//            } else {
-//                Toast.makeText(context, "Load File Error =(", Toast.LENGTH_SHORT).show()
-//            }
-//        })
+        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(fileUri)).get(
+            ZipViewFragmentViewModel::class.java
+        )
+
+        viewModel.liveRootNode.observe(viewLifecycleOwner, Observer {
+            animView?.cancelAnimation()
+            animView?.visibility = View.GONE
+            if (it != null) {
+                setCurrentNode(it)
+            } else {
+                Toast.makeText(context, "Load File Error =(", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun getRealUriString(uri:Uri):String{
+        val colonIndex = uri.path!!.indexOf(':')
+        return "storage/emulated/0/"+uri.path!!.substring(colonIndex+1,uri.path!!.length)
     }
 
     private fun checkReadExternalStoragePermission(){
@@ -83,6 +72,9 @@ class ZipViewFragment(val fileUri: Uri) : Fragment(), View.OnClickListener {
 
             // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
             // app-defined int constant that should be quite unique
+        }else{
+//            val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
+//            val a=0
         }
     }
 
@@ -92,7 +84,7 @@ class ZipViewFragment(val fileUri: Uri) : Fragment(), View.OnClickListener {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
+//                    val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
                 } else {
                     Toast.makeText(context, "Permission not granted", Toast.LENGTH_SHORT).show()
                     // permission denied, boo! Disable the

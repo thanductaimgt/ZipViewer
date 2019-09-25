@@ -11,9 +11,9 @@ import androidx.viewpager.widget.PagerAdapter
 
 class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
     FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-    val fileUris = ArrayList<Uri>()
+    val fileUris = ArrayList<String>()
     var curFragment: Fragment? = null
-    var lastRemovedUri: Uri? = null
+    var lastRemovedUri: String? = null
     var lastRemovedIndex: Int? = null
 
     override fun getItem(position: Int): Fragment {
@@ -25,7 +25,7 @@ class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
     }
 
     override fun getPageTitle(position: Int): CharSequence? {
-        return Utils.getFileName(context, fileUris[position])
+        return Utils.getFileName(fileUris[position])
     }
 
     override fun setPrimaryItem(container: ViewGroup, position: Int, any: Any) {
@@ -35,7 +35,7 @@ class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
         super.setPrimaryItem(container, position, any)
     }
 
-    fun addTabPage(uri: Uri) {
+    fun addTabPage(uri: String) {
         fileUris.add(uri)
         notifyDataSetChanged()
     }
@@ -54,7 +54,7 @@ class MainActivityAdapter(private val context: Context, fm: FragmentManager) :
     override fun getItemPosition(any: Any): Int {
         val uri = (any as ZipViewFragment).fileUri
         val position = fileUris.indexOf(uri)
-        return if (position == -1 || position > lastRemovedIndex!!) {
+        return if (position == -1) {
             PagerAdapter.POSITION_NONE
         } else {
             PagerAdapter.POSITION_UNCHANGED
