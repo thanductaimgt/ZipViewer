@@ -7,7 +7,7 @@ data class ZipNode(
     var parentNode: ZipNode? = null,
     var level: Int = 0,
     var childNodes: ArrayList<ZipNode> = ArrayList()
-) {
+):NullableZipNode {
     fun insertEntry(entry: ZipEntry, level: Int): ZipNode {
         return if (level > this.level) {
             ZipNode(entry, this, level).also { childNodes.add(it) }
@@ -16,3 +16,7 @@ data class ZipNode(
         }
     }
 }
+
+interface NullableZipNode
+
+class NullZipNode:NullableZipNode

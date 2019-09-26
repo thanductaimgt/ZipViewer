@@ -17,7 +17,7 @@
     <color name="darkBackgroundAccent">#363636</color>
     <color name="darkStrongGray">#474747</color>
     <color name="darkWeakGray">#666565</color>
-    <color name="darkErrorText">#b00020</color>
-    <color name="darkCancelButtonBackground">#e61515</color>
+    <color name="darkErrorText">#e61515</color>
+    <color name="darkCancelButtonBackground">#731b00</color>
     <color name="darkText">@color/lightPrimary</color>#212121
 </resources>

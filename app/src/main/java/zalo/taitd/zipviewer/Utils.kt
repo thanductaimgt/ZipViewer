@@ -10,11 +10,18 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 
 object Utils {
-    fun getFileName(context: Context, uri: Uri): String {
+    fun parseFileName(context: Context, uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {
             with(context.contentResolver.query(uri, null, null, null, null)) {
@@ -34,7 +41,90 @@ object Utils {
         return result!!
     }
 
-    fun getFileName(filePath: String): String {
+    fun getZipCentralDirInfo(fileUri: String): Pair<Int, Int> {
+        var input: InputStream? = null
+        var connection: HttpURLConnection? = null
+        try {
+            connection = openConnection(fileUri, rangeEnd = Constants.MAX_EOCD_AND_COMMENT_SIZE)
+            input = connection.inputStream
+
+            val data = ByteArray(4096)
+            val wrapped = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+
+            var count = input.read(data)
+            var isEocdFound = false
+            var i: Int
+            var centralDirOffset = -1
+            var centralDirSize = -1
+            while (count != -1) {
+                i = 0
+                while (i < count - 21) {
+                    if (data[i] == 0x50.toByte() && data[i + 1] == 0x4B.toByte() && data[i + 2] == 0x05.toByte() && data[i + 3] == 0x06.toByte()) {
+                        centralDirOffset = wrapped.getInt(i + 16)
+                        centralDirSize = wrapped.getInt(i + 12)
+                        isEocdFound = true
+                        break
+                    }
+                    i++
+                }
+                if (isEocdFound) {
+                    break
+                }
+                count = input.read(data)
+            }
+
+            return Pair(centralDirOffset, centralDirSize)
+        } catch (e:Throwable){
+            e.printStackTrace()
+            return Pair(Constants.ERROR, Constants.ERROR)
+        } finally {
+            //close all resources
+            input?.close()
+            connection?.disconnect()
+        }
+    }
+
+    fun getFileSize(fileUri: String): Long {
+        val input: InputStream? = null
+        var connection: HttpURLConnection? = null
+        return try {
+            connection = openConnection(fileUri)
+            connection.contentLength.toLong()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Constants.ERROR.toLong()
+        } finally {
+            //close all resources
+            input?.close()
+            connection?.disconnect()
+        }
+    }
+
+    fun openConnection(
+        fileUri: String,
+        rangeStart: Int? = null,
+        rangeEnd: Int? = null
+    ): HttpURLConnection {
+        return (URL(fileUri).openConnection() as HttpURLConnection).apply {
+            (rangeStart ?: rangeEnd)?.let {
+                setRequestProperty(
+                    "Range",
+                    "bytes=${rangeStart ?: ""}-${rangeEnd ?: ""}"
+                )
+            }
+
+            connect()
+            if ((responseCode != Constants.HTTP_PARTIAL_CONTENT && (rangeStart != null || rangeEnd != null)) ||
+                (responseCode != HttpURLConnection.HTTP_OK && (rangeStart == null && rangeEnd == null))
+            ) {
+                throw Throwable(
+                    "$TAG: Server returned HTTP ${responseCode}: $responseMessage"
+                )
+            }
+        }
+    }
+
+    fun parseFileName(filePath: String): String {
         val filePathWithoutSeparator =
             if (filePath.endsWith('/')) filePath.substring(0, filePath.lastIndex) else filePath
         return filePathWithoutSeparator.substring(
@@ -69,6 +159,17 @@ object Utils {
         ) else ""
     }
 
+    fun hideKeyboard(context: Context, view: View) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        view.clearFocus()
+    }
+
+    fun showKeyboard(context: Context, view: View) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+    }
+
     /* Get uri related content real local file path. */
     @SuppressLint("NewApi")
     fun getUriRealPathCompat(context: Context, uri: Uri): String? {
@@ -83,7 +184,7 @@ object Utils {
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     private fun getUriRealPathForKitkatAndAbove(context: Context, uri: Uri): String? {
-        var ret:String? = ""
+        var ret: String? = ""
 
         if (isContentUri(uri)) {
             ret = if (isGooglePhotoDoc(uri.authority)) {
@@ -115,7 +216,7 @@ object Utils {
                     val mediaContentUri = when (docType) {
                         "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                         "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        else->MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                        else -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     }
 
                     // Get where clause with real document id.
@@ -205,11 +306,11 @@ object Utils {
     ): String {
         var ret = ""
 
-        var document_id:String?=null
+        var document_id: String? = null
 
         // Query the uri with condition.
-        with(contentResolver.query(uri, null, whereClause, null, null)){
-            this?.let {cursor->
+        with(contentResolver.query(uri, null, whereClause, null, null)) {
+            this?.let { cursor ->
                 if (cursor.moveToFirst()) {
 
 //                    // Get columns name by uri type.
@@ -232,14 +333,16 @@ object Utils {
 
         document_id = document_id!!.substring(document_id!!.lastIndexOf(":") + 1)
 
-        with(contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            null,
-            MediaStore.Images.Media._ID + " = ? ",
-            arrayOf(document_id),
-            null
-        )){
-            this?.let{cursor->
+        with(
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null,
+                MediaStore.Images.Media._ID + " = ? ",
+                arrayOf(document_id),
+                null
+            )
+        ) {
+            this?.let { cursor ->
                 cursor.moveToFirst()
                 ret = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA))
             }
@@ -248,7 +351,7 @@ object Utils {
         return ret
     }
 
-    fun isHttpUri(uri:String):Boolean{
+    fun isHttpUri(uri: String): Boolean {
         return uri.startsWith("http")
     }
 }

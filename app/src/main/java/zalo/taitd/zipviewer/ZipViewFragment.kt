@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,11 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.airbnb.lottie.LottieDrawable
 import kotlinx.android.synthetic.main.fragment_zip_view.*
 import kotlinx.android.synthetic.main.fragment_zip_view.view.*
-import java.io.File
-import java.util.zip.ZipFile
 
 
-class ZipViewFragment(val fileUri: String) : Fragment(), View.OnClickListener {
+class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment(), View.OnClickListener {
     private lateinit var viewModel: ZipViewFragmentViewModel
     var curZipNode: ZipNode? = null
     private lateinit var adapter: FileListAdapter
@@ -37,17 +34,17 @@ class ZipViewFragment(val fileUri: String) : Fragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         initView(view)
 
-        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(fileUri)).get(
+        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(fileInfo)).get(
             ZipViewFragmentViewModel::class.java
         )
 
         viewModel.liveRootNode.observe(viewLifecycleOwner, Observer {
             animView?.cancelAnimation()
             animView?.visibility = View.GONE
-            if (it != null) {
+            if (it is ZipNode) {
                 setCurrentNode(it)
             } else {
-                Toast.makeText(context, "Load File Error =(", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.error_occurred), Toast.LENGTH_SHORT).show()
             }
         })
     }

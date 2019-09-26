@@ -2,7 +2,6 @@ package zalo.taitd.zipviewer
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.provider.MediaStore
@@ -10,18 +9,24 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.webkit.MimeTypeMap
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.bottom_sheet_dialog.view.*
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var adapter: MainActivityAdapter
     private var doubleBackToExitPressedOnce = false
+    private lateinit var bottomSheetDialog:BottomSheetDialog
+    private lateinit var inputUrlFragment: InputUrlFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,24 +62,37 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         chooseFileImgView.setOnClickListener(this)
         addFileImgView.setOnClickListener(this)
+
+        initBottomSheet()
+
+        inputUrlFragment = InputUrlFragment(supportFragmentManager)
+    }
+
+    private fun initBottomSheet(){
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_dialog, null)
+
+        bottomSheetDialog = BottomSheetDialog(this)
+
+        // Fix BottomSheetDialog not showing after getting hidden when the user drags it down
+        bottomSheetDialog.setOnShowListener { dialogInterface ->
+            val bottomSheetDialog = dialogInterface as BottomSheetDialog
+            val bottomSheet = bottomSheetDialog.findViewById<FrameLayout>(R.id.design_bottom_sheet)
+            BottomSheetBehavior.from(bottomSheet!!).apply {
+                skipCollapsed = true
+            }
+        }
+        bottomSheetDialog.setContentView(sheetView)
+
+        sheetView.openFromLocalTextView.setOnClickListener(this)
+        sheetView.openFromUrlTextView.setOnClickListener(this)
     }
 
     override fun onClick(view: View) {
-        when (view.id) {
-            R.id.chooseFileImgView -> {
-                addDefaultTab()
-//                dispatchChoosePictureIntent()
-            }
-            R.id.addFileImgView -> {
-                addDefaultTab()
-                //dispatchChoosePictureIntent()
-            }
+        when {
+            view.id == R.id.chooseFileImgView || view.id == R.id.addFileImgView -> bottomSheetDialog.show()
+            view.id == R.id.openFromLocalTextView -> dispatchChoosePictureIntent()
+            view.id == R.id.openFromUrlTextView -> inputUrlFragment.show()
         }
-    }
-
-    private fun addDefaultTab(){
-        val defaultUri = "https://drive.google.com/uc?export=download&id=1Zson--ESF9M2AhsN7n1AQoGeF06NmiFK"
-        addTab(defaultUri)
     }
 
     private fun dispatchChoosePictureIntent() {
@@ -101,13 +119,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             when (requestCode) {
                 Constants.CHOOSE_FILE -> {
                     intent?.data?.let {
-                        adapter.fileUris.forEachIndexed { index, uri ->
-                            if(uri == it.toString()){
+                        adapter.filesInfo.forEachIndexed { index, fileInfo ->
+                            if(fileInfo.first == it.toString()){
                                 viewPager.currentItem = index
                                 return@let
                             }
                         }
-                        addTab(it.toString())
+                        addTab(Triple(it.toString(), -1,-1))
                     }
                 }
             }
@@ -116,9 +134,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun addTab(uri: String) {
-        tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(uri)))
-        adapter.addTabPage(uri)
+    fun addTab(fileInfo:Triple<String, Int, Int>) {
+        bottomSheetDialog.dismiss()
+
+        val fileName = fileInfo.first
+        tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(fileName)))
+        adapter.addTabPage(fileInfo)
         viewPager.currentItem = viewPager.childCount-1
 
         showAddButton()
@@ -129,7 +150,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             tabLayout.removeTabAt(position)
             adapter.removeTabPage(position)
 
-            if(adapter.fileUris.isEmpty()){
+            if(adapter.filesInfo.isEmpty()){
                 hideAddButton()
             }
         }
@@ -148,16 +169,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun getTabView(uri: String): View {
-        // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
         val rootView = LayoutInflater.from(this).inflate(R.layout.custom_tab, null)
         val titleTextView = rootView.findViewById(R.id.titleTextView) as TextView
-        titleTextView.text = Utils.getFileName(uri)
+        titleTextView.text = Utils.parseFileName(uri)
 
         val closeTabImgView = rootView.findViewById(R.id.closeTabImgView) as ImageView
         closeTabImgView.setOnClickListener{
             var indexToRemove:Int?=null
-            adapter.fileUris.forEachIndexed { index, fileUri ->
-                if(uri == fileUri){
+            adapter.filesInfo.forEachIndexed { index, fileInfo ->
+                if(uri == fileInfo.first){
                     indexToRemove = index
                     return@forEachIndexed
                 }
@@ -169,7 +189,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onBackPressed() {
         val fragment = adapter.curFragment as ZipViewFragment?
-        //supportFragmentManager.findFragmentByTag("android:switcher:" + R.id.viewPager + ":" + viewPager.currentItem) as ZipViewFragment
         if (fragment?.curZipNode?.parentNode != null) {
             fragment.setCurrentNode(fragment.curZipNode!!.parentNode!!)
         } else {

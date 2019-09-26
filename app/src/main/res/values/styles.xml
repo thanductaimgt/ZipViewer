@@ -47,10 +47,11 @@
     </style>
 
     <style name="ButtonTheme.RoundCorners" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="colorPrimary">@color/darkBackground</item>
         <item name="cornerRadius">@dimen/sizeRoundCornerRadiusLayout</item>
         <item name="android:paddingTop">@dimen/sizeButtonPaddingVertical</item>
         <item name="android:paddingBottom">@dimen/sizeButtonPaddingVertical</item>
-        <item name="android:enabled">false</item>
     </style>
 
 <!--    <style name="BottomSheetDialogTheme.Transparent" parent="Theme.Design.light.BottomSheetDialog">-->
@@ -81,7 +82,7 @@
 
     <style name="ButtonTheme.Cancel" parent="Theme.MaterialComponents.Light">
         <item name="materialButtonStyle">@style/ButtonTheme.RoundCorners</item>
-        <item name="colorPrimary">@color/lightCancelButtonBackground</item>
+        <item name="colorPrimary">@color/darkCancelButtonBackground</item>
         <item name="colorPrimaryDark">@color/lightPrimaryDark</item>
         <item name="colorAccent">@color/lightAccent</item>
         <item name="android:colorBackground">@color/lightBackground</item>

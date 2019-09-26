@@ -32,7 +32,7 @@ class FileListAdapter(private val fragment: Fragment) :
             val zipNode = zipNodes[position]
             val zipEntry = zipNode.entry!!
             itemView.apply {
-                val fileName = Utils.getFileName(zipEntry.name)
+                val fileName = Utils.parseFileName(zipEntry.name)
                 val fileExtension = Utils.getFileExtension(fileName)
                 fileNameTextView.text = fileName
                 fileSizeTextView.text =

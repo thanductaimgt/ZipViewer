@@ -10,4 +10,15 @@
     <string name="add_file">Thêm file</string>
     <string name="time_format">%s\n%s</string>
     <string name="close_tab">Đóng tab</string>
- </resources>
+    <string name="open_file_from">Mở file từ</string>
+    <string name="local_file_system">Bộ nhớ hệ thống</string>
+    <string name="url">Url</string>
+    <string name="input_url">Nhập File Url</string>
+    <string name="cancel">Hủy</string>
+    <string name="open">Mở</string>
+    <string name="invalid_url">Url không hợp lệ</string>
+    <string name="not_a_zip_file">Không phải Zip file</string>
+    <string name="not_support_file_unknown_size">Không hỗ trợ file không rõ kích thước</string>
+    <string name="error_occurred">Có lỗi xảy ra</string>
+    <string name="cannot_resolve_host">Không thể kết nối đến url</string>
+</resources>
