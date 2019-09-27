@@ -1,14 +1,10 @@
 package zalo.taitd.zipviewer
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -18,10 +14,19 @@ import kotlinx.android.synthetic.main.fragment_zip_view.*
 import kotlinx.android.synthetic.main.fragment_zip_view.view.*
 
 
-class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment(), View.OnClickListener {
+class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment(),
+    View.OnClickListener {
     private lateinit var viewModel: ZipViewFragmentViewModel
     var curZipNode: ZipNode? = null
-    private lateinit var adapter: FileListAdapter
+    private lateinit var fileViewAdapter: FileViewAdapter
+    private lateinit var filePathAdapter: FilePathAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(fileInfo)).get(
+            ZipViewFragmentViewModel::class.java
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,75 +39,30 @@ class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         initView(view)
 
-        viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(fileInfo)).get(
-            ZipViewFragmentViewModel::class.java
-        )
-
         viewModel.liveRootNode.observe(viewLifecycleOwner, Observer {
             animView?.cancelAnimation()
             animView?.visibility = View.GONE
             if (it is ZipNode) {
                 setCurrentNode(it)
             } else {
-                Toast.makeText(context, getString(R.string.error_occurred), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.error_occurred), Toast.LENGTH_SHORT)
+                    .show()
             }
         })
     }
 
-    private fun getRealUriString(uri:Uri):String{
-        val colonIndex = uri.path!!.indexOf(':')
-        return "storage/emulated/0/"+uri.path!!.substring(colonIndex+1,uri.path!!.length)
-    }
-
-    private fun checkReadExternalStoragePermission(){
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE)
-            != PackageManager.PERMISSION_GRANTED) {
-
-//            // Should we show an explanation?
-//            if (shouldShowRequestPermissionRationale(
-//                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-//                // Explain to the user why we need to read the contacts
-//            }
-
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE)
-
-            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-            // app-defined int constant that should be quite unique
-        }else{
-//            val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
-//            val a=0
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-//                    val uriRealPath = Utils.getUriRealPathCompat(context!!, fileUri)
-                } else {
-                    Toast.makeText(context, "Permission not granted", Toast.LENGTH_SHORT).show()
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-            }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
-            }
-        }
-    }
-
     private fun initView(view: View) {
         view.apply {
-            adapter = FileListAdapter(this@ZipViewFragment)
-            recyclerView.apply {
-                adapter = this@ZipViewFragment.adapter
+            fileViewAdapter = FileViewAdapter(this@ZipViewFragment)
+            fileViewRecyclerView.apply {
+                adapter = this@ZipViewFragment.fileViewAdapter
                 layoutManager = LinearLayoutManager(context)
+            }
+
+            filePathAdapter = FilePathAdapter(this@ZipViewFragment)
+            filePathRecyclerView.apply {
+                adapter = this@ZipViewFragment.filePathAdapter
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             }
 
             animView.repeatCount = LottieDrawable.INFINITE
@@ -111,11 +71,11 @@ class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment
         }
     }
 
-    override fun onClick(v: View) {
-        when (v.id) {
+    override fun onClick(view: View) {
+        when (view.id) {
             R.id.rootItemView -> {
-                val position = recyclerView.getChildLayoutPosition(v)
-                val zipNode = adapter.zipNodes[position]
+                val position = fileViewRecyclerView.getChildLayoutPosition(view)
+                val zipNode = fileViewAdapter.zipNodes[position]
                 if (zipNode.entry == null || zipNode.entry!!.isDirectory) {
                     setCurrentNode(zipNode)
                 } else {
@@ -123,16 +83,18 @@ class ZipViewFragment(private val fileInfo: Triple<String, Int, Int>) : Fragment
                         .show()
                 }
             }
+            R.id.pathTextView -> {
+                val position = filePathRecyclerView.getChildLayoutPosition(view)
+                val zipNode = filePathAdapter.zipNodes[position]
+                setCurrentNode(zipNode)
+            }
         }
     }
 
     fun setCurrentNode(zipNode: ZipNode) {
         curZipNode = zipNode
-        adapter.zipNodes = zipNode.childNodes.sortedBy { !it.entry!!.isDirectory }
-        adapter.notifyDataSetChanged()
-    }
-
-    companion object{
-        const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1447
+        fileViewAdapter.zipNodes = zipNode.childNodes.sortedBy { !it.entry!!.isDirectory }
+        fileViewAdapter.notifyDataSetChanged()
+        filePathAdapter.setCurrentNode(zipNode)
     }
 }

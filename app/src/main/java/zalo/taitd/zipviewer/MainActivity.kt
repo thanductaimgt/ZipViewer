@@ -4,11 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -25,7 +23,7 @@ import kotlinx.android.synthetic.main.bottom_sheet_dialog.view.*
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var adapter: MainActivityAdapter
     private var doubleBackToExitPressedOnce = false
-    private lateinit var bottomSheetDialog:BottomSheetDialog
+    private lateinit var bottomSheetDialog: BottomSheetDialog
     private lateinit var inputUrlFragment: InputUrlFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +34,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initView() {
-        adapter = MainActivityAdapter(this, supportFragmentManager)
+        adapter = MainActivityAdapter(supportFragmentManager)
         viewPager.adapter = adapter
         viewPager.offscreenPageLimit = 8
         tabLayout.setupWithViewPager(viewPager, false)
@@ -62,13 +60,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         chooseFileImgView.setOnClickListener(this)
         addFileImgView.setOnClickListener(this)
+        chooseFileTextView.setOnClickListener(this)
 
         initBottomSheet()
 
         inputUrlFragment = InputUrlFragment(supportFragmentManager)
     }
 
-    private fun initBottomSheet(){
+    private fun initBottomSheet() {
         val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_dialog, null)
 
         bottomSheetDialog = BottomSheetDialog(this)
@@ -89,28 +88,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(view: View) {
         when {
-            view.id == R.id.chooseFileImgView || view.id == R.id.addFileImgView -> bottomSheetDialog.show()
+            arrayOf(R.id.chooseFileImgView, R.id.addFileImgView, R.id.chooseFileTextView).contains(
+                view.id
+            ) -> bottomSheetDialog.show()
             view.id == R.id.openFromLocalTextView -> dispatchChoosePictureIntent()
             view.id == R.id.openFromUrlTextView -> inputUrlFragment.show()
         }
     }
 
     private fun dispatchChoosePictureIntent() {
-        val zipMimeType =
-            MimeTypeMap.getSingleton().getMimeTypeFromExtension(Constants.ZIP_EXTENSION)
-        val getIntent = Intent(Intent.ACTION_GET_CONTENT).apply { type = zipMimeType }
-
-        val pickIntent =
-            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
-                type = zipMimeType
-            }
-
-        val chooserIntent =
-            Intent.createChooser(getIntent, getString(R.string.label_choose_file_from)).apply {
-                putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(pickIntent))
-            }
-
-        startActivityForResult(chooserIntent, Constants.CHOOSE_FILE)
+        Toast.makeText(this, "Not implemented =)", Toast.LENGTH_SHORT).show()
+//        val zipMimeType =
+//            MimeTypeMap.getSingleton().getMimeTypeFromExtension(Constants.ZIP_EXTENSION)
+//        val getIntent = Intent(Intent.ACTION_GET_CONTENT).apply { type = zipMimeType }
+//
+//        val pickIntent =
+//            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
+//                type = zipMimeType
+//            }
+//
+//        val chooserIntent =
+//            Intent.createChooser(getIntent, getString(R.string.label_choose_file_from)).apply {
+//                putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(pickIntent))
+//            }
+//
+//        startActivityForResult(chooserIntent, Constants.CHOOSE_FILE)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -119,13 +121,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             when (requestCode) {
                 Constants.CHOOSE_FILE -> {
                     intent?.data?.let {
-                        adapter.filesInfo.forEachIndexed { index, fileInfo ->
-                            if(fileInfo.first == it.toString()){
-                                viewPager.currentItem = index
-                                return@let
-                            }
-                        }
-                        addTab(Triple(it.toString(), -1,-1))
+                        addTabIfNotAdded(Triple(it.toString(), -1, -1))
                     }
                 }
             }
@@ -134,15 +130,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    fun addTab(fileInfo:Triple<String, Int, Int>) {
+    fun addTabIfNotAdded(fileInfo: Triple<String, Int, Int>) {
+        var isTabAdded = false
+        adapter.filesInfo.forEachIndexed { index, it ->
+            if (fileInfo.first == it.first) {
+                viewPager.currentItem = index
+                isTabAdded = true
+                return@forEachIndexed
+            }
+        }
+
         bottomSheetDialog.dismiss()
 
-        val fileName = fileInfo.first
-        tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(fileName)))
-        adapter.addTabPage(fileInfo)
-        viewPager.currentItem = viewPager.childCount-1
+        if(!isTabAdded){
+            val fileName = fileInfo.first
+            tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(fileName)))
+            adapter.addTabPage(fileInfo)
+            viewPager.currentItem = viewPager.childCount - 1
 
-        showAddButton()
+            showAddButton()
+        }
     }
 
     private fun removeTab(position: Int) {
@@ -150,7 +157,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             tabLayout.removeTabAt(position)
             adapter.removeTabPage(position)
 
-            if(adapter.filesInfo.isEmpty()){
+            if (adapter.filesInfo.isEmpty()) {
                 hideAddButton()
             }
         }
@@ -169,15 +176,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun getTabView(uri: String): View {
-        val rootView = LayoutInflater.from(this).inflate(R.layout.custom_tab, null)
+        val rootView = LayoutInflater.from(this).inflate(R.layout.item_tab, null)
         val titleTextView = rootView.findViewById(R.id.titleTextView) as TextView
-        titleTextView.text = Utils.parseFileName(uri)
+        titleTextView.text = Utils.parseFileName(uri).let { if (it.endsWith(".zip")) it else "$it.zip" }
 
         val closeTabImgView = rootView.findViewById(R.id.closeTabImgView) as ImageView
-        closeTabImgView.setOnClickListener{
-            var indexToRemove:Int?=null
+        closeTabImgView.setOnClickListener {
+            var indexToRemove: Int? = null
             adapter.filesInfo.forEachIndexed { index, fileInfo ->
-                if(uri == fileInfo.first){
+                if (uri == fileInfo.first) {
                     indexToRemove = index
                     return@forEachIndexed
                 }

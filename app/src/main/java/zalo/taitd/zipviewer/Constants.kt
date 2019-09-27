@@ -6,5 +6,6 @@ object Constants{
     const val ERROR = -2
     const val MAX_EOCD_AND_COMMENT_SIZE = 0xFFFF + 22
     const val HTTP_PARTIAL_CONTENT = 206
+    const val LENGTH = 432864757
 //    const val HTTP_RANGE_NOT_SATISFIABLE = 416
 }

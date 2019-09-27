@@ -1,5 +1,6 @@
 package zalo.taitd.zipviewer
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -25,6 +26,7 @@ import kotlinx.android.synthetic.main.fragment_input_url.view.*
 import kotlinx.android.synthetic.main.fragment_input_url.view.fileNameTextView
 import kotlinx.android.synthetic.main.fragment_input_url.view.fileSizeTextView
 
+@SuppressLint("CheckResult")
 class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View.OnClickListener {
     private val compositeDisposable = CompositeDisposable()
     private var fileUri: String? = null
@@ -53,33 +55,28 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
         dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         view.apply {
-            urlEditText.setText("")
-
             urlEditText.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(editable: Editable) {
                     val url = editable.toString()
                     openButton.isEnabled = false
                     hideWarning()
 
-                    when {
-                        URLUtil.isValidUrl(url) -> {
-                            showLoadingAnimation()
+                    if (URLUtil.isValidUrl(url)) {
+                        showLoadingAnimation()
 
-                            Single.zip(
-                                Single.fromCallable {
-                                    Utils.getZipCentralDirInfo(url)
-                                }
-                                    .subscribeOn(Schedulers.newThread()),
-                                Single.fromCallable { Utils.getFileSize(url) }
-                                    .subscribeOn(Schedulers.newThread()),
-                                BiFunction { pair: Pair<Int, Int>, fileSize: Long ->
-                                    Triple(fileSize, pair.first, pair.second)
-                                }
-                            ).subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeWith(FileInfoObserver(url))
-                        }
-                        url != "" -> showWarning(getString(R.string.invalid_url))
+                        Single.zip(
+                            Single.fromCallable { Utils.getZipCentralDirInfo(url) }
+                                .subscribeOn(Schedulers.newThread()),
+                            Single.fromCallable { Utils.getFileSize(url) }
+                                .subscribeOn(Schedulers.newThread()),
+                            BiFunction { pair: Pair<Int, Int>, fileSize: Long ->
+                                Triple(fileSize, pair.first, pair.second)
+                            }
+                        ).subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeWith(FileInfoObserver(url))
+                    } else if (url != "") {
+                        showWarning(getString(R.string.invalid_url))
                     }
                 }
 
@@ -103,6 +100,7 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
                 }
             }
             urlEditText.requestFocus()
+
             openButton.isEnabled = false
 
             openButton.setOnClickListener(this@InputUrlFragment)
@@ -117,7 +115,8 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
             fileNameTextView.visibility = View.VISIBLE
             fileSizeTextView.visibility = View.VISIBLE
 
-            fileNameTextView.text = Utils.parseFileName(fileUri)
+            fileNameTextView.text =
+                Utils.parseFileName(fileUri).let { if (it.endsWith(".zip")) it else "$it.zip" }
 
             fileSizeTextView.text = String.format(
                 "(%s)",
@@ -180,19 +179,32 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
             R.id.openButton -> openFileAndDismiss()
             R.id.cancelButton -> clearFocusAndDismiss()
             R.id.swapImgView -> {
-                val linkWithSize =
+                val linkSlow =
                     "https://firebasestorage.googleapis.com/v0/b/zalo-4c204.appspot.com/o/test_db-master.zip?alt=media&token=dae8f14a-feb3-41eb-8538-742cedfe6eae"
                 val linkNoSize =
                     "https://drive.google.com/uc?export=download&id=10ct392b5iPrfvN8hrXreWnQKviMAuGV0"
                 val linkFake = "https://"
-                val linkQuick =
+                val linkQuick1 =
                     "https://drive.google.com/uc?export=download&id=1Zson--ESF9M2AhsN7n1AQoGeF06NmiFK"
+                val linkQuick2 =
+                    "https://drive.google.com/uc?export=download&id=1xvOM_us_rzXMGKbmVlCbwdh0XSaETy5c"
+                val linkQuick3 =
+                    "https://drive.google.com/uc?export=download&id=18f57kX1rBLL-yn661sLvcQxDVn5oJcyG"
+                val linkNotZip =
+                    "https://drive.google.com/uc?export=download&id=15LFS6C1dJN2BdxjptYZjWJCGQIU89PEK"
+                val linkZalo =
+                "https://zalo-filegroup-bf1.zdn.vn/d7c39a788ff463aa3ae5/99484683834119407"
+
                 urlEditText.setText(
                     when (urlEditText.text.toString()) {
-                        linkWithSize -> linkNoSize
-                        linkNoSize -> linkFake
-                        linkFake -> linkQuick
-                        else -> linkWithSize
+//                        linkQuick1 -> linkQuick2
+//                        linkQuick2 -> linkQuick3
+//                        linkQuick3 -> linkFake
+//                        linkFake -> linkNoSize
+//                        linkNoSize -> linkSlow
+//                        linkSlow -> linkNotZip
+//                        linkNotZip -> linkZalo
+                        else -> linkZalo
                     }
                 )
             }
@@ -206,7 +218,7 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
 
     private fun openFileAndDismiss() {
         view?.apply {
-            (activity as MainActivity).addTab(
+            (activity as MainActivity).addTabIfNotAdded(
                 Triple(urlEditText.text.toString(), centralDirOffset, centralDirSize)
             )
             clearFocusAndDismiss()
@@ -261,5 +273,6 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
 
     override fun onDismiss(dialog: DialogInterface) {
         fileUri = null
+        super.onDismiss(dialog)
     }
 }

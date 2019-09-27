@@ -10,24 +10,24 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-class FileListAdapter(private val fragment: Fragment) :
-    RecyclerView.Adapter<FileListAdapter.FileItemViewHolder>() {
+class FileViewAdapter(private val fragment: Fragment) :
+    RecyclerView.Adapter<FileViewAdapter.FileViewViewHolder>() {
     var zipNodes: List<ZipNode> = ArrayList()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileItemViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_file, parent, false)
-        return FileItemViewHolder(view)
+        return FileViewViewHolder(view)
     }
 
     override fun getItemCount(): Int {
         return zipNodes.size
     }
 
-    override fun onBindViewHolder(holder: FileItemViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: FileViewViewHolder, position: Int) {
         holder.bind(position)
     }
 
-    inner class FileItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class FileViewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(position: Int) {
             val zipNode = zipNodes[position]
             val zipEntry = zipNode.entry!!

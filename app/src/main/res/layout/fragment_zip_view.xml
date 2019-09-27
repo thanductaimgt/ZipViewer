@@ -1,25 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/darkBackgroundAccent">
+
     <androidx.recyclerview.widget.RecyclerView
-        android:background="@color/darkBackgroundAccent"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
-        android:clipToPadding="false"
+        android:id="@+id/filePathRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/recyclerView"/>
-    <com.airbnb.lottie.LottieAnimationView
-        android:visibility="gone"
-        app:lottie_rawRes="@raw/loading"
-        android:id="@+id/animView"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
+        tools:layout_height="40dp" />
+
+    <View
+        android:background="@color/darkStrongGray"
+        app:layout_constraintTop_toBottomOf="@id/filePathRecyclerView"
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fileViewRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filePathRecyclerView" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animView"
         android:layout_width="64dp"
-        android:layout_height="0dp"/>
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_rawRes="@raw/loading" />
 </androidx.constraintlayout.widget.ConstraintLayout>
