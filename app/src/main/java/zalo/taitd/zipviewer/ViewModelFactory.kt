@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
 class ViewModelFactory private constructor() : ViewModelProvider.Factory {
-    private lateinit var fileInfo: Triple<String, Int, Int>
+    private lateinit var zipInfo: ZipInfo
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when (modelClass) {
-            ZipViewFragmentViewModel::class.java -> ZipViewFragmentViewModel(fileInfo) as T
+            ZipViewFragmentViewModel::class.java -> ZipViewFragmentViewModel(zipInfo) as T
             else -> modelClass.newInstance()
         }
     }
@@ -17,7 +17,7 @@ class ViewModelFactory private constructor() : ViewModelProvider.Factory {
     companion object {
         private var instance: ViewModelFactory? = null
 
-        fun getInstance(fileInfo:Triple<String, Int, Int>?=null): ViewModelFactory {
+        fun getInstance(zipInfo:ZipInfo?=null): ViewModelFactory {
             if (instance == null) {
                 synchronized(ViewModelFactory) {
                     if (instance == null) {
@@ -26,7 +26,7 @@ class ViewModelFactory private constructor() : ViewModelProvider.Factory {
                 }
             }
 
-            fileInfo?.let { instance!!.fileInfo =it }
+            zipInfo?.let { instance!!.zipInfo =it }
             return instance!!
         }
     }

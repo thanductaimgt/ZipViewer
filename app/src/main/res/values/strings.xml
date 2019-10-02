@@ -18,7 +18,9 @@
     <string name="open">Mở</string>
     <string name="invalid_url">Url không hợp lệ</string>
     <string name="not_a_zip_file">Không phải file Zip</string>
-    <string name="not_support_file_unknown_size">Không hỗ trợ file không rõ kích thước</string>
     <string name="error_occurred">Có lỗi xảy ra</string>
     <string name="cannot_resolve_host">Không thể kết nối đến url</string>
+    <string name="unknown_size">Không rõ kích thước</string>
+    <string name="download">Tải về</string>
+    <string name="detail">Chi tiết</string>
 </resources>

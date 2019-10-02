@@ -1,73 +1,59 @@
 package zalo.taitd.zipviewer
 
+import android.Manifest
 import android.content.Context
+import android.os.Environment
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.*
+import androidx.core.app.ActivityCompat
+import android.content.pm.PackageManager
+import android.app.Activity
 
 
 object Utils {
-    fun getZipCentralDirInfo(fileUri: String): Pair<Int, Int> {
-        var input: InputStream? = null
-        var connection: HttpURLConnection? = null
-        try {
-            connection = openConnection(fileUri)//, rangeEnd = Constants.MAX_EOCD_AND_COMMENT_SIZE)
-            input = connection.inputStream
+    fun getTime(msDosTime: BitSet, msDosDate: BitSet): Long {
+        val seconds = msDosTime[0, 5].toInt() * 2
+        val minutes = msDosTime[5, 11].toInt()
+        val hours = msDosTime[11, 16].toInt()
 
-            val data = ByteArray(4096)
-            val wrapped = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+        val days = msDosDate[0, 5].toInt()
+        val months = msDosDate[5, 9].toInt() - 1
+        val years = msDosDate[9, 16].toInt() + 1980
 
-            var count = input.read(data)
-            var isEocdFound = false
-            var i: Int
-            var centralDirOffset = -1
-            var centralDirSize = -1
-            while (count != -1) {
-                i = 0
-                while (i < count - 21) {
-                    if (data[i] == 0x50.toByte() && data[i + 1] == 0x4B.toByte() && data[i + 2] == 0x05.toByte() && data[i + 3] == 0x06.toByte()) {
-                        centralDirOffset = wrapped.getInt(i + 16)
-                        centralDirSize = wrapped.getInt(i + 12)
-                        isEocdFound = true
-                        break
-                    }
-                    i++
-                }
-                if (isEocdFound) {
-                    break
-                }
-                count = input.read(data)
-            }
-
-            return Pair(centralDirOffset, centralDirSize)
-        } catch (e:Throwable){
-            e.printStackTrace()
-            return Pair(Constants.ERROR, Constants.ERROR)
-        } finally {
-            //close all resources
-            input?.close()
-            connection?.disconnect()
-        }
+        return Calendar.getInstance()
+            .apply { set(years, months, days, hours, minutes, seconds) }
+            .timeInMillis
     }
 
-    fun getFileSize(fileUri: String): Long {
-        val input: InputStream? = null
-        var connection: HttpURLConnection? = null
-        return try {
-            connection = openConnection(fileUri)
-            connection.contentLength.toLong()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-            Constants.ERROR.toLong()
-        } finally {
-            //close all resources
-            input?.close()
-            connection?.disconnect()
+    fun createExtraBytes(extraId: Short, extraData: ByteArray): ByteArray {
+        val extraIdBytes =
+            ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(extraId).array()
+        val extraSizeBytes =
+            ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(extraData.size.toShort())
+                .array()
+        return extraIdBytes + extraSizeBytes + extraData
+    }
+
+    fun getExtraBytes(extra: ByteArray, extraId: Short): ByteArray {
+        val extraIdBytes =
+            ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(extraId).array()
+        val wrapped = ByteBuffer.wrap(extra).order(ByteOrder.LITTLE_ENDIAN)
+        var res: ByteArray? = null
+        var i = 0
+        while (i < extra.size) {
+            if (extra[i] == extraIdBytes[0] && extra[i + 1] == extraIdBytes[1]) {
+                val extraSize = wrapped.getShort(i + 2)
+                res = extra.copyOfRange(i + 4, i + 4 + extraSize)
+                break
+            }
+            i++
         }
+        return res!!
     }
 
     fun openConnection(
@@ -77,13 +63,9 @@ object Utils {
     ): HttpURLConnection {
         return (URL(fileUri).openConnection() as HttpURLConnection).apply {
             (rangeStart ?: rangeEnd)?.let {
-//                setRequestProperty(
-//                    "Range",
-//                    "bytes=${rangeStart ?: ""}-${rangeEnd ?: ""}"
-//                )
                 setRequestProperty(
                     "Range",
-                    "bytes=${Constants.LENGTH-rangeEnd!! ?: ""}-${""?: ""}"
+                    "bytes=${rangeStart ?: ""}-${rangeEnd ?: ""}"
                 )
             }
 
@@ -98,7 +80,7 @@ object Utils {
         }
     }
 
-    fun parseFileName(uri: String): String {
+    fun getFileName(uri: String): String {
         val filePathWithoutSeparator =
             if (uri.endsWith('/')) uri.substring(0, uri.lastIndex) else uri
         return filePathWithoutSeparator.substring(
@@ -143,7 +125,34 @@ object Utils {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
+
+    fun getDownloadFolderPath(): String {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path
+    }
+
+    fun isStoragePermissionsGranted(activity: Activity): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            activity,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun requestStoragePermissions(activity: Activity) {
+        ActivityCompat.requestPermissions(
+            activity,
+            Constants.PERMISSIONS_STORAGE,
+            Constants.REQUEST_EXTERNAL_STORAGE
+        )
+    }
 }
 
 val Any.TAG: String
     get() = this::class.java.simpleName
+
+fun BitSet.toInt(): Int {
+    var res = 0
+    for (i in 0 until this.length()) {
+        res += if (this.get(i)) 1.shl(i) else 0
+    }
+    return res
+}

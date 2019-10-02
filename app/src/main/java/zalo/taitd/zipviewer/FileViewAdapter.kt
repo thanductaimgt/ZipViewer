@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+
 class FileViewAdapter(private val fragment: Fragment) :
     RecyclerView.Adapter<FileViewAdapter.FileViewViewHolder>() {
     var zipNodes: List<ZipNode> = ArrayList()
@@ -32,7 +33,7 @@ class FileViewAdapter(private val fragment: Fragment) :
             val zipNode = zipNodes[position]
             val zipEntry = zipNode.entry!!
             itemView.apply {
-                val fileName = Utils.parseFileName(zipEntry.name)
+                val fileName = Utils.getFileName(zipEntry.name)
                 val fileExtension = Utils.getFileExtension(fileName)
                 fileNameTextView.text = fileName
                 fileSizeTextView.text =
@@ -54,6 +55,9 @@ class FileViewAdapter(private val fragment: Fragment) :
                     SimpleDateFormat.getDateInstance().format(lastModifiedDate),
                     SimpleDateFormat.getTimeInstance().format(lastModifiedDate)
                 )
+
+                downloadImgView.setOnClickListener(fragment as View.OnClickListener)
+                infoImgView.setOnClickListener(fragment as View.OnClickListener)
                 setOnClickListener(fragment as View.OnClickListener)
             }
         }

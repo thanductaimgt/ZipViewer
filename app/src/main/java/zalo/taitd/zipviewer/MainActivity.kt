@@ -1,10 +1,7 @@
 package zalo.taitd.zipviewer
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
@@ -18,6 +15,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet_dialog.view.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -26,9 +25,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var bottomSheetDialog: BottomSheetDialog
     private lateinit var inputUrlFragment: InputUrlFragment
 
+    //test
+    private fun buildZipTree(zipEntries: List<ZipEntry>): ZipNode {
+        val rootNode = ZipNode()
+        var lastInsertedNode = rootNode
+
+        zipEntries.forEach { zipEntry ->
+            lastInsertedNode = lastInsertedNode.insertEntry(
+                zipEntry,
+                zipEntry.name.split('/').filter { it != "" }.size
+            )
+        }
+        return rootNode
+    }
+
+    private fun foo(){
+        val zipEntries = ZipFile("/storage/emulated/0/Download/Downloads.zip").entries().toList()
+        val rootNode = buildZipTree(zipEntries)
+        val a=0
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        foo()
 
         initView()
     }
@@ -98,6 +119,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun dispatchChoosePictureIntent() {
         Toast.makeText(this, "Not implemented =)", Toast.LENGTH_SHORT).show()
+
 //        val zipMimeType =
 //            MimeTypeMap.getSingleton().getMimeTypeFromExtension(Constants.ZIP_EXTENSION)
 //        val getIntent = Intent(Intent.ACTION_GET_CONTENT).apply { type = zipMimeType }
@@ -115,25 +137,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 //        startActivityForResult(chooserIntent, Constants.CHOOSE_FILE)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        super.onActivityResult(requestCode, resultCode, intent)
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                Constants.CHOOSE_FILE -> {
-                    intent?.data?.let {
-                        addTabIfNotAdded(Triple(it.toString(), -1, -1))
-                    }
-                }
-            }
-        } else {
-            Log.d(TAG, "resultCode != Activity.RESULT_OK")
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, intent)
+//        if (resultCode == Activity.RESULT_OK) {
+//            when (requestCode) {
+//                Constants.CHOOSE_FILE -> {
+//                    intent?.data?.let {
+//                        addTabIfNotAdded(Triple(it.toString(), -1, -1))
+//                    }
+//                }
+//            }
+//        } else {
+//            Log.d(TAG, "resultCode != Activity.RESULT_OK")
+//        }
+//    }
 
-    fun addTabIfNotAdded(fileInfo: Triple<String, Int, Int>) {
+    fun addTabIfNotAdded(zipInfo: ZipInfo) {
         var isTabAdded = false
-        adapter.filesInfo.forEachIndexed { index, it ->
-            if (fileInfo.first == it.first) {
+        adapter.zipInfos.forEachIndexed { index, it ->
+            if (zipInfo.url == it.url) {
                 viewPager.currentItem = index
                 isTabAdded = true
                 return@forEachIndexed
@@ -143,9 +165,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         bottomSheetDialog.dismiss()
 
         if(!isTabAdded){
-            val fileName = fileInfo.first
-            tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(fileName)))
-            adapter.addTabPage(fileInfo)
+            tabLayout.addTab(tabLayout.newTab().setCustomView(getTabView(zipInfo.url)))
+            adapter.addTabPage(zipInfo)
             viewPager.currentItem = viewPager.childCount - 1
 
             showAddButton()
@@ -157,7 +178,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             tabLayout.removeTabAt(position)
             adapter.removeTabPage(position)
 
-            if (adapter.filesInfo.isEmpty()) {
+            if (adapter.zipInfos.isEmpty()) {
                 hideAddButton()
             }
         }
@@ -178,13 +199,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun getTabView(uri: String): View {
         val rootView = LayoutInflater.from(this).inflate(R.layout.item_tab, null)
         val titleTextView = rootView.findViewById(R.id.titleTextView) as TextView
-        titleTextView.text = Utils.parseFileName(uri).let { if (it.endsWith(".zip")) it else "$it.zip" }
+        titleTextView.text = Utils.getFileName(uri).let { if (it.endsWith(".zip")) it else "$it.zip" }
 
         val closeTabImgView = rootView.findViewById(R.id.closeTabImgView) as ImageView
         closeTabImgView.setOnClickListener {
             var indexToRemove: Int? = null
-            adapter.filesInfo.forEachIndexed { index, fileInfo ->
-                if (uri == fileInfo.first) {
+            adapter.zipInfos.forEachIndexed { index, fileInfo ->
+                if (uri == fileInfo.url) {
                     indexToRemove = index
                     return@forEachIndexed
                 }

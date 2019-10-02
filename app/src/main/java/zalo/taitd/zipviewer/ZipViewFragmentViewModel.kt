@@ -13,26 +13,25 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.*
+import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.collections.ArrayList
 
 
 @SuppressLint("CheckResult")
-class ZipViewFragmentViewModel(fileInfo: Triple<String, Int, Int>) : ViewModel() {
+class ZipViewFragmentViewModel(zipInfo: ZipInfo) : ViewModel() {
     val liveRootNode = MutableLiveData<NullableZipNode>()
     private val compositeDisposable = CompositeDisposable()
 
     init {
-        val fileUri = fileInfo.first
-        val centralDirOffset = fileInfo.second
-        val centralDirSize = fileInfo.third
-
-        ZipViewerApplication.zipTreeCaches[fileUri]?.let {
+        ZipViewerApplication.zipTreeCaches[zipInfo.url]?.let {
             liveRootNode.value = it
         } ?: Single.fromCallable {
-            val zipEntries = getFileEntries(fileUri, centralDirOffset, centralDirSize)
+            val zipEntries = getFileEntries(zipInfo)
             buildZipTree(zipEntries).also { rootNode ->
-                ZipViewerApplication.zipTreeCaches[fileUri] = rootNode
+                ZipViewerApplication.zipTreeCaches[zipInfo.url] = rootNode
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -40,26 +39,22 @@ class ZipViewFragmentViewModel(fileInfo: Triple<String, Int, Int>) : ViewModel()
     }
 
     private fun getFileEntries(
-        fileUri: String,
-        centralDirOffset: Int,
-        centralDirSize: Int
+        zipInfo: ZipInfo
     ): List<ZipEntry> {
-        return if (centralDirOffset == -1 && centralDirSize == -1) {
-            getFileEntriesFromLocalUri(fileUri)
+        return if (zipInfo.centralDirOffset == -1 && zipInfo.centralDirSize == -1) {
+            getFileEntriesFromLocalUri(zipInfo.url)
         } else {
-            getFileEntriesFromHttpUri(fileUri, centralDirOffset, centralDirSize)
+            getFileEntriesFromHttpUri(zipInfo)
         }
     }
 
     private fun getFileEntriesFromLocalUri(fileUri: String): List<ZipEntry> {
-        // check uri here
+        // check url here
         return ZipFile(fileUri).entries().toList()
     }
 
     private fun getFileEntriesFromHttpUri(
-        fileUri: String,
-        centralDirOffset: Int,
-        centralDirSize: Int
+        zipInfo: ZipInfo
     ): List<ZipEntry> {
         val zipEntries = ArrayList<ZipEntry>()
 
@@ -68,13 +63,13 @@ class ZipViewFragmentViewModel(fileInfo: Triple<String, Int, Int>) : ViewModel()
         try {
             connection =
                 Utils.openConnection(
-                    fileUri,
-                    centralDirOffset,
-                    centralDirOffset + centralDirSize - 1
+                    zipInfo.url,
+                    zipInfo.centralDirOffset,
+                    zipInfo.centralDirOffset + zipInfo.centralDirSize - 1
                 )
             input = connection.inputStream
 
-            val data = ByteArray(centralDirSize)
+            val data = ByteArray(zipInfo.centralDirSize)
             val buffer = ByteArray(4096)
             var count = input!!.read(buffer)
             var readByteNum = 0
@@ -91,19 +86,18 @@ class ZipViewFragmentViewModel(fileInfo: Triple<String, Int, Int>) : ViewModel()
             while (i < data.size) {
                 val bitFlag = wrapped.getShort(i + 8)
                 val compressionMethod = wrapped.getShort(i + 10)
-                val lastModifiedTime = wrapped.getShort(i + 12)
-                val lastModifiedDate = wrapped.getShort(i + 14)
-                val lastModified = wrapped.getInt(i + 12)
-                val crC32 = wrapped.getInt(i + 16)
+                val lastModifiedTime = data.copyOfRange(i + 12, i + 14)
+                val lastModifiedDate = data.copyOfRange(i + 14, i + 16)
+                val crC32 = data.copyOfRange(i + 16, i + 20)
                 val compressedSize = wrapped.getInt(i + 20)
                 val uncompressedSize = wrapped.getInt(i + 24)
                 val fileNameLength = wrapped.getShort(i + 28)
                 val extraFieldLength = wrapped.getShort(i + 30)
                 val fileCommentLength = wrapped.getShort(i + 32)
-                val relativeOffsetLocal = wrapped.getInt(i + 42)
+                val localHeaderRelativeOffset = data.copyOfRange(i + 42, i + 46)
                 val fileExtra =
                     data.copyOfRange(
-                        i + 46 + fileCommentLength,
+                        i + 46 + fileNameLength,
                         i + 46 + fileNameLength + extraFieldLength
                     )
                 val fileComment = data.copyOfRange(
@@ -116,12 +110,20 @@ class ZipViewFragmentViewModel(fileInfo: Triple<String, Int, Int>) : ViewModel()
 
                 zipEntries.add(ZipEntry(fileName).apply {
                     comment = fileComment
-//                    crc = crC32.toLong()
+                    crc = CRC32().apply { update(crC32) }.value
                     setCompressedSize(compressedSize.toLong())
                     size = uncompressedSize.toLong()
                     method = compressionMethod.toInt()
-                    extra = fileExtra
-                    time = lastModifiedTime.toLong() * 2 * 1000
+
+                    //add localHeaderRelativeOffset to extra
+                    extra = fileExtra + Utils.createExtraBytes(
+                        Constants.RELATIVE_OFFSET_LOCAL_HEADER,
+                        localHeaderRelativeOffset
+                    )
+                    time = Utils.getTime(
+                        BitSet.valueOf(lastModifiedTime),
+                        BitSet.valueOf(lastModifiedDate)
+                    )
                 })
 //                    ZipEntry(fileName, fileComment, crC32, compressedSize,
 //                    uncompressedSize, compressionMethod, lastModifiedTime, fileExtra,

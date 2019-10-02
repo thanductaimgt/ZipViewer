@@ -45,7 +45,32 @@
         android:id="@+id/fileSizeTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"/>
+    <ImageView
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/detail"
+        android:padding="8dp"
+        android:src="@drawable/info"
+        android:id="@+id/infoImgView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        android:layout_width="35dp"
+        android:layout_height="0dp"/>
+    <ImageView
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/download"
+        android:padding="8dp"
+        android:src="@drawable/download"
+        android:id="@+id/downloadImgView"
+        app:layout_constraintBottom_toBottomOf="@id/infoImgView"
+        app:layout_constraintEnd_toStartOf="@id/infoImgView"
+        app:layout_constraintTop_toTopOf="@id/infoImgView"
+        app:layout_constraintDimensionRatio="1:1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
     <TextView
+        app:layout_constraintVertical_bias="1"
+        app:layout_constraintTop_toBottomOf="@id/infoImgView"
         android:layout_marginBottom="8dp"
         android:gravity="end"
         android:textSize="@dimen/sizeTextSmall"

@@ -25,13 +25,15 @@ import kotlinx.android.synthetic.main.fragment_input_url.*
 import kotlinx.android.synthetic.main.fragment_input_url.view.*
 import kotlinx.android.synthetic.main.fragment_input_url.view.fileNameTextView
 import kotlinx.android.synthetic.main.fragment_input_url.view.fileSizeTextView
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 @SuppressLint("CheckResult")
 class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View.OnClickListener {
     private val compositeDisposable = CompositeDisposable()
-    private var fileUri: String? = null
-    private var centralDirOffset = -1
-    private var centralDirSize = -1
+    private var zipInfo: ZipInfo? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,22 +61,11 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
                 override fun afterTextChanged(editable: Editable) {
                     val url = editable.toString()
                     openButton.isEnabled = false
-                    hideWarning()
+//                    hideWarning()
 
                     if (URLUtil.isValidUrl(url)) {
                         showLoadingAnimation()
-
-                        Single.zip(
-                            Single.fromCallable { Utils.getZipCentralDirInfo(url) }
-                                .subscribeOn(Schedulers.newThread()),
-                            Single.fromCallable { Utils.getFileSize(url) }
-                                .subscribeOn(Schedulers.newThread()),
-                            BiFunction { pair: Pair<Int, Int>, fileSize: Long ->
-                                Triple(fileSize, pair.first, pair.second)
-                            }
-                        ).subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeWith(FileInfoObserver(url))
+                        getZipInfo(url)
                     } else if (url != "") {
                         showWarning(getString(R.string.invalid_url))
                     }
@@ -109,19 +100,108 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
         }
     }
 
-    private fun showFilePreview(fileUri: String, fileSize: Long) {
+    private fun getZipInfo(url: String) {
+        val singles = ArrayList<Single<ZipInfo>>()
+
+        ZipViewerApplication.zipInfoCaches[url]?.let {
+            singles.add(Single.just(it))
+        }
+
+        singles.add(
+            Single.zip(
+                Single.fromCallable { getZipCentralDirInfo(url) }
+                    .subscribeOn(Schedulers.newThread()),
+                Single.fromCallable { getFileSize(url) }
+                    .subscribeOn(Schedulers.newThread()),
+                BiFunction { pair: Pair<Int, Int>, fileSize: Long ->
+                    ZipInfo(url, fileSize, pair.first, pair.second)
+                }
+            )
+        )
+
+        singles.forEach {
+            it.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(GetZipInfoObserver())
+        }
+    }
+
+    private fun getFileSize(fileUri: String): Long {
+        val input: InputStream? = null
+        var connection: HttpURLConnection? = null
+        return try {
+            connection = Utils.openConnection(fileUri)
+            connection.contentLength.toLong()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Constants.ERROR.toLong()
+        } finally {
+            //close all resources
+            input?.close()
+            connection?.disconnect()
+        }
+    }
+
+    private fun getZipCentralDirInfo(fileUri: String): Pair<Int, Int> {
+        var input: InputStream? = null
+        var connection: HttpURLConnection? = null
+        try {
+            connection =
+                Utils.openConnection(fileUri, rangeEnd = Constants.MAX_EOCD_AND_COMMENT_SIZE)
+            input = connection.inputStream
+
+            val data = ByteArray(4096)
+            val wrapped = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+
+            var count = input.read(data, 3, data.size - 3)
+            var isEocdFound = false
+            var i: Int
+            var centralDirOffset = -1
+            var centralDirSize = -1
+            while (count != -1) {
+                i = 0
+                while (i < count + 3 - 21) {
+                    if (data[i] == 0x50.toByte() && data[i + 1] == 0x4B.toByte() && data[i + 2] == 0x05.toByte() && data[i + 3] == 0x06.toByte()) {
+                        centralDirOffset = wrapped.getInt(i + 16)
+                        centralDirSize = wrapped.getInt(i + 12)
+                        isEocdFound = true
+                        break
+                    }
+                    i++
+                }
+                if (isEocdFound) {
+                    break
+                }
+                for (j in 0 until 3) {
+                    data[j] = if (count + j >= 0) data[count + j] else 0
+                }
+                count = input.read(data, 3, data.size - 3)
+            }
+
+            return Pair(centralDirOffset, centralDirSize)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            return Pair(Constants.ERROR, Constants.ERROR)
+        } finally {
+            //close all resources
+            input?.close()
+            connection?.disconnect()
+        }
+    }
+
+    private fun showFilePreview(zipInfo: ZipInfo) {
         view?.apply {
             fileExtensionImgView.visibility = View.VISIBLE
             fileNameTextView.visibility = View.VISIBLE
             fileSizeTextView.visibility = View.VISIBLE
 
             fileNameTextView.text =
-                Utils.parseFileName(fileUri).let { if (it.endsWith(".zip")) it else "$it.zip" }
+                Utils.getFileName(zipInfo.url).let { if (it.endsWith(".zip")) it else "$it.zip" }
 
-            fileSizeTextView.text = String.format(
+            fileSizeTextView.text = if (zipInfo.size != (-1).toLong()) String.format(
                 "(%s)",
-                Utils.getFormatFileSize(fileSize)
-            )
+                Utils.getFormatFileSize(zipInfo.size)
+            ) else getString(R.string.unknown_size)
         }
     }
 
@@ -162,12 +242,12 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
 
     override fun onResume() {
         super.onResume()
-        view?.urlEditText?.setText(fileUri)
+        view?.urlEditText?.setText(zipInfo?.url)
     }
 
     override fun onPause() {
         super.onPause()
-        fileUri = view?.urlEditText?.text.toString()
+        zipInfo?.url = view?.urlEditText?.text.toString()
     }
 
     fun show() {
@@ -193,18 +273,18 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
                 val linkNotZip =
                     "https://drive.google.com/uc?export=download&id=15LFS6C1dJN2BdxjptYZjWJCGQIU89PEK"
                 val linkZalo =
-                "https://zalo-filegroup-bf1.zdn.vn/d7c39a788ff463aa3ae5/99484683834119407"
+                    "https://zalo-filegroup-bf1.zdn.vn/d7c39a788ff463aa3ae5/99484683834119407"
 
                 urlEditText.setText(
                     when (urlEditText.text.toString()) {
-//                        linkQuick1 -> linkQuick2
-//                        linkQuick2 -> linkQuick3
-//                        linkQuick3 -> linkFake
-//                        linkFake -> linkNoSize
-//                        linkNoSize -> linkSlow
-//                        linkSlow -> linkNotZip
-//                        linkNotZip -> linkZalo
-                        else -> linkZalo
+                        linkQuick1 -> linkQuick2
+                        linkQuick2 -> linkQuick3
+                        linkQuick3 -> linkFake
+                        linkFake -> linkNoSize
+                        linkNoSize -> linkSlow
+                        linkSlow -> linkNotZip
+                        linkNotZip -> linkZalo
+                        else -> linkQuick1
                     }
                 )
             }
@@ -219,7 +299,7 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
     private fun openFileAndDismiss() {
         view?.apply {
             (activity as MainActivity).addTabIfNotAdded(
-                Triple(urlEditText.text.toString(), centralDirOffset, centralDirSize)
+                zipInfo!!
             )
             clearFocusAndDismiss()
         }
@@ -230,29 +310,20 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
         super.onDestroy()
     }
 
-    inner class FileInfoObserver(private val url: String) : SingleObserver<Triple<Long, Int, Int>> {
-        override fun onSuccess(triple: Triple<Long, Int, Int>) {
-            val fileSize = triple.first
-            val centralDirOffset = triple.second
-            val centralDirSize = triple.third
-
-            if (url == urlEditText.text.toString()) {
+    inner class GetZipInfoObserver : SingleObserver<ZipInfo> {
+        override fun onSuccess(zipInfo: ZipInfo) {
+            if (zipInfo.url == urlEditText.text.toString()) {
                 hideLoadingAnimation()
-                if (fileSize == Constants.ERROR.toLong() || centralDirOffset == Constants.ERROR || centralDirSize == Constants.ERROR) {
+                hideWarning()
+                hideFilePreview()
+                if (zipInfo.size == Constants.ERROR.toLong() || zipInfo.centralDirOffset == Constants.ERROR || zipInfo.centralDirSize == Constants.ERROR) {
                     showWarning(getString(R.string.cannot_resolve_host))
                 } else {
-                    if (centralDirOffset != -1 || centralDirSize != -1) {
-                        if (fileSize != (-1).toLong()) {
-                            this@InputUrlFragment.fileUri = url
-                            this@InputUrlFragment.centralDirOffset =
-                                centralDirOffset
-                            this@InputUrlFragment.centralDirSize =
-                                centralDirSize
-                            openButton.isEnabled = true
-                            showFilePreview(url, fileSize)
-                        } else {
-                            showWarning(getString(R.string.not_support_file_unknown_size))
-                        }
+                    if (zipInfo.centralDirOffset != -1 || zipInfo.centralDirSize != -1) {
+                        ZipViewerApplication.zipInfoCaches[zipInfo.url] = zipInfo
+                        this@InputUrlFragment.zipInfo = zipInfo
+                        openButton.isEnabled = true
+                        showFilePreview(zipInfo)
                     } else {
                         showWarning(getString(R.string.not_a_zip_file))
                     }
@@ -272,7 +343,7 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
     }
 
     override fun onDismiss(dialog: DialogInterface) {
-        fileUri = null
+        zipInfo = null
         super.onDismiss(dialog)
     }
 }

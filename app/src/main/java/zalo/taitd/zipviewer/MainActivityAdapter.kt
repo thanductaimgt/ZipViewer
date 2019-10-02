@@ -9,15 +9,15 @@ import androidx.viewpager.widget.PagerAdapter
 
 class MainActivityAdapter(fm: FragmentManager) :
     FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-    val filesInfo = ArrayList<Triple<String, Int, Int>>()
+    val zipInfos = ArrayList<ZipInfo>()
     var curFragment: Fragment? = null
 
     override fun getItem(position: Int): Fragment {
-        return ZipViewFragment(filesInfo[position])
+        return ZipViewFragment(zipInfos[position])
     }
 
     override fun getCount(): Int {
-        return filesInfo.size
+        return zipInfos.size
     }
 
     override fun setPrimaryItem(container: ViewGroup, position: Int, any: Any) {
@@ -27,14 +27,14 @@ class MainActivityAdapter(fm: FragmentManager) :
         super.setPrimaryItem(container, position, any)
     }
 
-    fun addTabPage(fileInfo:Triple<String, Int, Int>) {
-        filesInfo.add(fileInfo)
+    fun addTabPage(zipInfo:ZipInfo) {
+        zipInfos.add(zipInfo)
         notifyDataSetChanged()
     }
 
     fun removeTabPage(position: Int) {
-        if (filesInfo.isNotEmpty() && position < filesInfo.size) {
-            filesInfo.removeAt(position)
+        if (zipInfos.isNotEmpty() && position < zipInfos.size) {
+            zipInfos.removeAt(position)
             notifyDataSetChanged()
         }
     }

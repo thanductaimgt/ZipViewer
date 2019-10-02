@@ -5,5 +5,6 @@ import android.app.Application
 class ZipViewerApplication :Application(){
     companion object{
         val zipTreeCaches = HashMap<String, ZipNode>()
+        val zipInfoCaches = HashMap<String, ZipInfo>()
     }
 }

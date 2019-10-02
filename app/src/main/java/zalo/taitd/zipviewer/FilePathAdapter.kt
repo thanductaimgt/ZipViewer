@@ -1,7 +1,6 @@
 package zalo.taitd.zipviewer
 
 import android.graphics.Typeface
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,7 +29,7 @@ class FilePathAdapter(private val fragment: Fragment) :
 
     inner class FilePathViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(position: Int) {
-            val fileName = zipNodes[position].entry?.name?.let { Utils.parseFileName(it) } ?: "root"
+            val fileName = zipNodes[position].entry?.name?.let { Utils.getFileName(it) } ?: "root"
             itemView.apply {
                 pathTextView.apply {
                     text = when (position) {
