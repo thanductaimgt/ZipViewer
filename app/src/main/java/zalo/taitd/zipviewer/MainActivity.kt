@@ -15,8 +15,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet_dialog.view.*
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -25,31 +23,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var bottomSheetDialog: BottomSheetDialog
     private lateinit var inputUrlFragment: InputUrlFragment
 
-    //test
-    private fun buildZipTree(zipEntries: List<ZipEntry>): ZipNode {
-        val rootNode = ZipNode()
-        var lastInsertedNode = rootNode
-
-        zipEntries.forEach { zipEntry ->
-            lastInsertedNode = lastInsertedNode.insertEntry(
-                zipEntry,
-                zipEntry.name.split('/').filter { it != "" }.size
-            )
-        }
-        return rootNode
-    }
-
-    private fun foo(){
-        val zipEntries = ZipFile("/storage/emulated/0/Download/Downloads.zip").entries().toList()
-        val rootNode = buildZipTree(zipEntries)
-        val a=0
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        foo()
 
         initView()
     }

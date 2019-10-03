@@ -5,7 +5,7 @@
     <string name="choose_file">Chọn file</string>
     <string name="label_choose_file_from">Chọn file từ</string>
     <string name="file_icon">File Icon</string>
-    <string name="directory">Thư mục (%d item)</string>
+    <string name="directory_description">Thư mục (%d item)</string>
     <string name="press_again_to_exit">Bấm lần nữa để thoát</string>
     <string name="add_file">Thêm file</string>
     <string name="time_format">%s\n%s</string>
@@ -23,4 +23,10 @@
     <string name="unknown_size">Không rõ kích thước</string>
     <string name="download">Tải về</string>
     <string name="detail">Chi tiết</string>
+    <string name="downloaded">Đã tải xuống %s %s</string>
+    <string name="downloading">Đang tải xuống %s %s</string>
+    <string name="download_error">Lỗi tải xuống %s %s</string>
+    <string name="file">file</string>
+    <string name="directory">thư mục</string>
+    <string name="root">root</string>
 </resources>

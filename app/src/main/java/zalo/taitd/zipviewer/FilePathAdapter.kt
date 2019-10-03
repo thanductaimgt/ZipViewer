@@ -29,7 +29,7 @@ class FilePathAdapter(private val fragment: Fragment) :
 
     inner class FilePathViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(position: Int) {
-            val fileName = zipNodes[position].entry?.name?.let { Utils.getFileName(it) } ?: "root"
+            val fileName = zipNodes[position].entry?.name?.let { Utils.getFileName(it) } ?: fragment.context!!.getString(R.string.root)
             itemView.apply {
                 pathTextView.apply {
                     text = when (position) {

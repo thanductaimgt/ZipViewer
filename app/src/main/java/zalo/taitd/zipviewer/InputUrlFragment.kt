@@ -196,7 +196,7 @@ class InputUrlFragment(private val fm: FragmentManager) : DialogFragment(), View
             fileSizeTextView.visibility = View.VISIBLE
 
             fileNameTextView.text =
-                Utils.getFileName(zipInfo.url).let { if (it.endsWith(".zip")) it else "$it.zip" }
+                Utils.getFileName(zipInfo.url).let { if (it.endsWith(".${Constants.ZIP_EXTENSION}")) it else "$it.${Constants.ZIP_EXTENSION}" }
 
             fileSizeTextView.text = if (zipInfo.size != (-1).toLong()) String.format(
                 "(%s)",

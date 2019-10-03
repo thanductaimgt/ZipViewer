@@ -38,7 +38,7 @@ class FileViewAdapter(private val fragment: Fragment) :
                 fileNameTextView.text = fileName
                 fileSizeTextView.text =
                     if (zipEntry.isDirectory) String.format(
-                        context.getString(R.string.directory),
+                        context.getString(R.string.directory_description),
                         zipNode.childNodes.size
                     ) else Utils.getFormatFileSize(
                         zipEntry.size

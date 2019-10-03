@@ -13,6 +13,7 @@ import java.util.*
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.app.Activity
+import java.io.File
 
 
 object Utils {
@@ -40,13 +41,11 @@ object Utils {
     }
 
     fun getExtraBytes(extra: ByteArray, extraId: Short): ByteArray {
-        val extraIdBytes =
-            ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(extraId).array()
         val wrapped = ByteBuffer.wrap(extra).order(ByteOrder.LITTLE_ENDIAN)
         var res: ByteArray? = null
         var i = 0
-        while (i < extra.size) {
-            if (extra[i] == extraIdBytes[0] && extra[i + 1] == extraIdBytes[1]) {
+        while (i < extra.size - 1) {
+            if (isHeader(extra.copyOfRange(i, i + 2), extraId)) {
                 val extraSize = wrapped.getShort(i + 2)
                 res = extra.copyOfRange(i + 4, i + 4 + extraSize)
                 break
@@ -82,9 +81,9 @@ object Utils {
 
     fun getFileName(uri: String): String {
         val filePathWithoutSeparator =
-            if (uri.endsWith('/')) uri.substring(0, uri.lastIndex) else uri
+            if (uri.endsWith(File.separator)) uri.substring(0, uri.lastIndex) else uri
         return filePathWithoutSeparator.substring(
-            filePathWithoutSeparator.lastIndexOf('/') + 1,
+            filePathWithoutSeparator.lastIndexOf(File.separator) + 1,
             filePathWithoutSeparator.length
         ).takeWhile { it != '#' && it != '?' }
     }
@@ -143,6 +142,20 @@ object Utils {
             Constants.PERMISSIONS_STORAGE,
             Constants.REQUEST_EXTERNAL_STORAGE
         )
+    }
+
+    fun isHeader(data: ByteArray, header: Number): Boolean {
+        val extraIdBytes =
+            when (header) {
+                is Short -> ByteBuffer.allocate(Short.Companion.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN).putShort(header)
+                is Int -> ByteBuffer.allocate(Int.Companion.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(header)
+                else -> ByteBuffer.allocate(Long.Companion.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(header as Long)
+            }
+        return data.contentEquals(extraIdBytes.array())
+    }
+
+    fun getUriPathLevel(uri: String): Int {
+        return uri.split(File.separator).filter { it != "" }.size
     }
 }
 
